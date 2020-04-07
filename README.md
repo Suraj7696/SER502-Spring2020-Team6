@@ -4,7 +4,7 @@ Language Name :- SARS
 
 Members:
 Suraj Atmakuri
-Akshay Kumar Pradeep
+Akshay Kumar Dileep
 Ria Mehta
 Sheran Dass Dominic Ravi Chandran
 
