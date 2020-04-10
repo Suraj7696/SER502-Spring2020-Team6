@@ -2,6 +2,21 @@ SER - 502 Contributions
 
 Members -
 Suraj Atmakuri(1216073573)
-Akshay Kumar Dileep
-Ria Mehta
-Sheran Dass Dominic Ravi Chandran
+Akshay Kumar Dileep(1217613982)
+Ria Mehta (1217195746)
+Sheran Dass Dominic Ravichandran(1217167939)
+
+
+Contributions milestone-1:
+
+Suraj(1216073573): Design document and Contributions.txt ;  Grammar: while loop, expressions
+Ria(1217195746): Design document and Contributions.txt ;  Grammar: if-else conditions, base skeleton for the grammar
+Akshay(1217613982): Design document and Contributions.txt ;  Grammar: commands, assignments, declarations
+Sheran(1217167939): Design document and Contributions.txt ;  Grammar: traditional for loop and for loop with range, boolean expressions
+
+Future contributions:
+
+Suraj(1216073573): compiler & parser using SWI prolog
+Ria(1217195746): compiler & parser using SWI prolog
+Akshay(1217613982): lexical Analyzer using python
+Sheran(1217167939): lexical Analyzer using python
