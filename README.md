@@ -6,5 +6,5 @@ Members:
 Suraj Atmakuri
 Akshay Kumar Dileep
 Ria Mehta
-Sheran Dass Dominic Ravi Chandran
+Sheran Dass Dominic Ravichandran
 
