@@ -1,4 +1,3 @@
-:- use_rendering(svgtree).
 program(prog(X)) --> block(X).
 
 block(blk(X)) --> ['{'],block_part(X),['}'].
@@ -84,24 +83,23 @@ term(X) --> num(X); id(X).
 iterator(t_plus(X)) --> id(X), [++].
 iterator(t_minus(X)) --> id(X), [--].
 
-:- table num/3.
-num(t_num(X,Y)) --> num(X),digit(Y).
+num(t_num(X,Y)) --> digit(X),num(Y).
 num(t_num(X)) --> digit(X).
 
-digit(t_digit(0)) --> [0].
-digit(t_digit(1)) --> [1].
-digit(t_digit(2)) --> [2].
-digit(t_digit(3)) --> [3].
-digit(t_digit(4)) --> [4].
-digit(t_digit(5)) --> [5].
-digit(t_digit(6)) --> [6].
-digit(t_digit(7)) --> [7].
-digit(t_digit(8)) --> [8].
-digit(t_digit(9)) --> [9].
+digit(0) --> [0].
+digit(1) --> [1].
+digit(2) --> [2].
+digit(3) --> [3].
+digit(4) --> [4].
+digit(5) --> [5].
+digit(6) --> [6].
+digit(7) --> [7].
+digit(8) --> [8].
+digit(9) --> [9].
 
-id(t_id(X,Y)) --> lowerchar(X), id(Y).
-id(t_id(X,Y)) --> num(X), id(Y).
-id(t_id(X)) --> lowerchar(X);num(X).
+id(t_id(X,Y)) --> lowerchar(X),id1(Y).
+id1(t_id1(X,Y)) --> (num(X);upperchar(X);lowerchar(X)),id1(Y).
+id1(t_id1(X)) --> num(X);upperchar(X);lowerchar(X).
 
 :- table openstring/3, letterstring/3.
 string(t_str(X)) --> ['\"'],openstring(X),['\"'].
@@ -112,56 +110,56 @@ letterstring(ls(X)) --> letter(X).
 letterstring(ls(X,Y)) -->  letterstring(X),letter(Y).
 
 letter(X) --> lowerchar(X); upperchar(X).
-lowerchar(t_lowC(a)) --> [a].
-lowerchar(t_lowC(b)) --> [b].
-lowerchar(t_lowC(c)) --> [c].
-lowerchar(t_lowC(d)) --> [d].
-lowerchar(t_lowC(e)) --> [e].
-lowerchar(t_lowC(f)) --> [f].
-lowerchar(t_lowC(g)) --> [g].
-lowerchar(t_lowC(h)) --> [h].
-lowerchar(t_lowC(i)) --> [i].
-lowerchar(t_lowC(j)) --> [j].
-lowerchar(t_lowC(k)) --> [k].
-lowerchar(t_lowC(l)) --> [l].
-lowerchar(t_lowC(m)) --> [m].
-lowerchar(t_lowC(n)) --> [n].
-lowerchar(t_lowC(o)) --> [o].
-lowerchar(t_lowC(p)) --> [p].
-lowerchar(t_lowC(q)) --> [q].
-lowerchar(t_lowC(r)) --> [r].
-lowerchar(t_lowC(s)) --> [s].
-lowerchar(t_lowC(t)) --> [t].
-lowerchar(t_lowC(u)) --> [u].
-lowerchar(t_lowC(v)) --> [v].
-lowerchar(t_lowC(w)) --> [w].
-lowerchar(t_lowC(x)) --> [x].
-lowerchar(t_lowC(y)) --> [y].
-lowerchar(t_lowC(z)) --> [z].
+lowerchar(a) --> [a].
+lowerchar(b) --> [b].
+lowerchar(c) --> [c].
+lowerchar(d) --> [d].
+lowerchar(e) --> [e].
+lowerchar(f) --> [f].
+lowerchar(g) --> [g].
+lowerchar(h) --> [h].
+lowerchar(i) --> [i].
+lowerchar(j) --> [j].
+lowerchar(k) --> [k].
+lowerchar(l) --> [l].
+lowerchar(m) --> [m].
+lowerchar(n) --> [n].
+lowerchar(o) --> [o].
+lowerchar(p) --> [p].
+lowerchar(q) --> [q].
+lowerchar(r) --> [r].
+lowerchar(s) --> [s].
+lowerchar(t) --> [t].
+lowerchar(u) --> [u].
+lowerchar(v) --> [v].
+lowerchar(w) --> [w].
+lowerchar(x) --> [x].
+lowerchar(y) --> [y].
+lowerchar(z) --> [z].
 
-upperchar(t_upC('A')) --> ['A'].
-upperchar(t_upC('B')) --> ['B'].
-upperchar(t_upC('C')) --> ['C'].
-upperchar(t_upC('D')) --> ['D'].
-upperchar(t_upC('E')) --> ['E'].
-upperchar(t_upC('F')) --> ['F'].
-upperchar(t_upC('G')) --> ['G'].
-upperchar(t_upC('H')) --> ['H'].
-upperchar(t_upC('I')) --> ['I'].
-upperchar(t_upC('J')) --> ['J'].
-upperchar(t_upC('K')) --> ['K'].
-upperchar(t_upC('L')) --> ['L'].
-upperchar(t_upC('M')) --> ['M'].
-upperchar(t_upC('N')) --> ['N'].
-upperchar(t_upC('O')) --> ['O'].
-upperchar(t_upC('P')) --> ['P'].
-upperchar(t_upC('Q')) --> ['Q'].
-upperchar(t_upC('R')) --> ['R'].
-upperchar(t_upC('S')) --> ['S'].
-upperchar(t_upC('T')) --> ['T'].
-upperchar(t_upC('U')) --> ['U'].
-upperchar(t_upC('V')) --> ['V'].
-upperchar(t_upC('W')) --> ['W'].
-upperchar(t_upC('X')) --> ['X'].
-upperchar(t_upC('Y')) --> ['Y'].
-upperchar(t_upC('Z')) --> ['Z'].
+upperchar('A') --> ['A'].
+upperchar('B') --> ['B'].
+upperchar('C') --> ['C'].
+upperchar('D') --> ['D'].
+upperchar('E') --> ['E'].
+upperchar('F') --> ['F'].
+upperchar('G') --> ['G'].
+upperchar('H') --> ['H'].
+upperchar('I') --> ['I'].
+upperchar('J') --> ['J'].
+upperchar('K') --> ['K'].
+upperchar('L') --> ['L'].
+upperchar('M') --> ['M'].
+upperchar('N') --> ['N'].
+upperchar('O') --> ['O'].
+upperchar('P') --> ['P'].
+upperchar('Q') --> ['Q'].
+upperchar('R') --> ['R'].
+upperchar('S') --> ['S'].
+upperchar('T') --> ['T'].
+upperchar('U') --> ['U'].
+upperchar('V') --> ['V'].
+upperchar('W') --> ['W'].
+upperchar('X') --> ['X'].
+upperchar('Y') --> ['Y'].
+upperchar('Z') --> ['Z'].

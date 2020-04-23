@@ -85,9 +85,9 @@ num --> num,digit.
 num --> digit.
 digit --> [0];[1];[2];[3];[4];[5];[6];[7];[8];[9].
 
-id --> lowerchar, id.
-id --> num, id.
-id --> num;lowerchar.
+id --> lowerchar,id1.
+id1 --> num;upperchar;lowerchar,id1.
+id1 --> num;upperchar;lowerchar.
 
 :- table openstring/2, letterstring/2.
 string --> ['\"'],openstring,['\"'].
