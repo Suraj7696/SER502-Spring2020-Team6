@@ -5,17 +5,17 @@ block(blk(X)) --> ['{'],block_part(X),['}'].
 block_part(bp(X,Y)) --> command(X), block_part(Y).
 block_part(bp(X)) --> command(X).
 
-command(t_com(X)) --> declaration(X),[;].
-command(X) --> assignment(X),[;].
-command(X) -->expression(X),[;].
-command(X) -->bool(X),[;].
-command(X) -->output(X),[;].
-command(X) -->if(X).
-command(X) --> ternary(X),[;].
-command(X) -->for(X).
-command(X) -->while(X).
-command(X) -->for_range(X).
-command(X) --> iterator(X),[;].
+command(com(X)) --> declaration(X),[;].
+command(com(X)) --> assignment(X),[;].
+command(com(X)) -->expression(X),[;].
+command(com(X)) -->bool(X),[;].
+command(com(X)) -->output(X),[;].
+command(com(X)) -->if(X).
+command(com(X)) --> ternary(X),[;].
+command(com(X)) -->for(X).
+command(com(X)) -->while(X).
+command(com(X)) -->for_range(X).
+command(com(X)) --> iterator(X),[;].
 
 :- table bool/3.
 bool(true) --> [true].
@@ -26,10 +26,10 @@ bool(t_and(X,Y)) --> bool(X), [and], bool(Y).
 bool(t_or(X,Y)) --> bool(X), [or], bool(Y).
 bool(X) --> condition(X).
 
-declaration(t_int_dec(X,Y)) --> [int], id(X), [=], num(Y).
-declaration(t_str_dec(X,Y)) --> [string], id(X), [=], string(Y).
-declaration(t_bool_dec(X,true)) --> [bool], id(X), [=], [true].
-declaration(t_bool_dec(X,false)) --> [bool], id(X), [=], [true].
+declaration(t_int_dec(int,X,Y)) --> [int], id(X), [=], num(Y).
+declaration(t_str_dec(string,X,Y)) --> [string], id(X), [=], string(Y).
+declaration(t_bool_dec(bool,X,true)) --> [bool], id(X), [=], [true].
+declaration(t_bool_dec(bool,X,false)) --> [bool], id(X), [=], [false].
 declaration(t_dec(X,Y)) --> type(X), id(Y).
 
 assignment(t_assign(X,Y)) --> id(X), [=], expression(Y).
@@ -37,8 +37,8 @@ assignment(t_assign(X,Y)) --> id(X), [=], string(Y).
 assignment(t_assign(X,Y)) --> id(X), [=], bool(Y).
 
 type(int) --> [int].
-type(int) -->[string].
-type(int) --> [bool].
+type(string) -->[string].
+type(bool) --> [bool].
 
 for(t_for(X,Y,Z,W)) --> [for],['('],assignment(X),[;],condition(Y),[;],iterator(Z),[;],[')'],block(W).
 for(t_for(X,Y,Z,W)) -->[for],['('],assignment(X),[;],condition(Y),[;],expression(Z),[;],[')'],block(W).
@@ -56,9 +56,9 @@ if(t_if(X,Y,Z)) --> [if],['('],condition(X),[')'], block(Y), [else], block(Z).
 ternary(t_ternary(X,Y,Z,U,V)) --> expression(X), condition_operator(Y), expression(Z), [?], block(U), [:], block(V).
 ternary(t_ternary(X,Y,Z,U,V)) --> id(X), condition_operator(Y), string(Z), [?], block(U), [:], block(V).
 
-output(t_out(X)) --> [print], ['('], id(X),[')'].
-output(X) --> [print], ['('], num(X),[')'].
-output(X) --> [print], ['('], string(X),[')'].
+output(out(X)) --> [print], ['('], id(X),[')'].
+output(out(X)) --> [print], ['('], num(X),[')'].
+output(out(X)) --> [print], ['('], string(X),[')'].
 
 condition(t_cond(X,Y,Z)) --> expression(X), condition_operator(Y), expression(Z).
 condition(t_cond(X,Y,Z)) --> string(X), condition_operator(Y), string(Z).
@@ -97,17 +97,20 @@ digit(7) --> [7].
 digit(8) --> [8].
 digit(9) --> [9].
 
-id(t_id(X,Y)) --> lowerchar(X),id1(Y).
-id1(t_id1(X,Y)) --> (num(X);upperchar(X);lowerchar(X)),id1(Y).
-id1(t_id1(X)) --> num(X);upperchar(X);lowerchar(X).
+id(id(X,Y)) --> lowerchar(X),id1(Y).
+id(id(X)) --> lowerchar(X).
+id1(id1(X,Y)) --> (num(X);upperchar(X);lowerchar(X)),id1(Y).
+id1(id1(X)) --> num(X);upperchar(X);lowerchar(X).
 
 :- table openstring/3, letterstring/3.
 string(t_str(X)) --> ['\"'],openstring(X),['\"'].
-openstring(op(X,Y)) --> openstring(X),letterstring(Y).
-openstring(op(X,Y)) --> openstring(X),num(Y).
-openstring(_) --> [].
+openstring(op(X,Y)) --> letterstring(X),openstring(Y).
+openstring(op(X,Y)) --> num(X),openstring(Y).
+openstring(op(X)) --> num(X).
+openstring(op(Y)) --> letterstring(Y).
+openstring(op(t)) --> [].
 letterstring(ls(X)) --> letter(X).
-letterstring(ls(X,Y)) -->  letterstring(X),letter(Y).
+letterstring(ls(X,Y)) --> letter(X),letterstring(Y).
 
 letter(X) --> lowerchar(X); upperchar(X).
 lowerchar(a) --> [a].
@@ -163,3 +166,135 @@ upperchar('W') --> ['W'].
 upperchar('X') --> ['X'].
 upperchar('Y') --> ['Y'].
 upperchar('Z') --> ['Z'].
+
+num_tree_to_num(X,N):- num_tree(X,0,N).
+num_tree(t_num(X,Y),Prefix,N) :- 
+    Prefix1 is Prefix*10 + X,
+    num_tree(Y,Prefix1,N).
+num_tree(t_num(X),Prefix,N) :-
+    N is Prefix * 10 + X.
+
+char_tree_to_string(X,Res) :- char_tree(X,"",Res).
+char_tree(op(X,Y),Bfr,Res) :- 
+    (letter_tree(X,A1);number_tree(X,A1)),
+    string_concat(Bfr,A1,Bfr1),char_tree(Y,Bfr1,Res).
+char_tree(op(t),Bfr,Res):- string_concat(Bfr,"",Res).
+
+letter_tree(X,Res) :- letter_tree_help(X,"",Res).
+letter_tree_help(ls(X,Y),Buf,Res) :- 
+    atom_string(X,N),string_concat(Buf,N,Buf1),
+    letter_tree_help(Y,Buf1,Res).
+letter_tree_help(ls(X),Buf,Res) :- 
+    atom_string(X,N),string_concat(Buf,N,Res).
+
+number_tree(X,Res) :- number_tree_help(X,"",Res).
+number_tree_help(t_num(X,Y),Buf,Res) :- 
+    number_string(X,N),string_concat(Buf,N,Buf1),
+    number_tree_help(Y,Buf1,Res).
+number_tree_help(t_num(X),Buf,Res) :- 
+    number_string(X,N),string_concat(Buf,N,Res).
+
+number_tree2(X,Res) :- number_tree_help2(X,"",Res).
+number_tree_help2(t_num(X,Y),Buf,Res) :- 
+    concat(Buf,X,Buf1),number_tree_help2(Y,Buf1,Res).
+number_tree_help2(t_num(X),Buf,Res) :- concat(Buf,X,Res).
+
+char_tree_to_atom(id(X,Y),"",Res):- 
+    concat(X,"",Buf),letter_tree_help2(Y,Buf,Res).
+char_tree_to_atom(id(X),"",Res):- concat(X,"",Res).
+letter_tree_help2(id1(X,Y),Buf,Res) :- 
+    ((number_tree2(X,T1),concat(Buf,T1,Buf1));concat(Buf,X,Buf1)),
+    letter_tree_help2(Y,Buf1,Res).
+letter_tree_help2(id1(X),Buf,Res) :- 
+    ((number_tree2(X,T1),concat(Buf,T1,Res));concat(Buf,X,Res)).
+
+
+
+
+
+
+lookup(Id, [(_Type,Id, X)|_], X).
+lookup(Id, [_|T], X) :- lookup(Id, T, X).
+
+lookup_type(Id, [_|T], X) :- lookup_type(Id, T, X).
+lookup_type(Id,[(Type,Id,_X)|_],Type).
+
+update(Type,Id, Val, [], [(Type,Id, Val)]).
+update(Type,Id, Val, [(Type,Id,_)|T], [(Type,Id, Val)|T]).
+update(Type,Id, Val, [H|T], [H|R]) :- update(Type,Id, Val, T, R).
+
+program_semantics(prog(X),FinalEnv) :- block_eval(X,[],FinalEnv).
+
+block_eval(blk(X),Env,FinalEnv) :- bp_eval(X,Env,FinalEnv).
+
+bp_eval(bp(X,Y),Env,FinalEnv) :- com_eval(X,Env,Env1),bp_eval(Y,Env1,FinalEnv).
+bp_eval(bp(X),Env,FinalEnv) :- com_eval(X,Env,FinalEnv).
+
+com_eval(com(X),Env,FinalEnv) :- 
+    dec_eval(X,Env,FinalEnv);assign_eval(X,Env,FinalEnv);
+    bool_eval(X,Env,FinalEnv);print_eval(X,Env,FinalEnv);
+    if_eval(X,Env,FinalEnv);while_eval(X,Env,FinalEnv);
+    for_eval(X,Env,FinalEnv);for_range_eval(X,Env,FinalEnv);
+    ternary_eval(X,Env,FinalEnv);iter_eval(X,Env,FinalEnv).
+
+assign_eval(t_assign(X,Y), Env, NE) :- 
+    eval_expr(Y,Env,E1,Val),check_type(Val,T),char_tree_to_atom(X,"",Id),
+    lookup_type(Id,E1,T1),T =@= T1,update(T,Id,Val,E1,NE).
+assign_eval(t_assign(X,Y), Env, NE) :- 
+    str_eval(Y,Env,Env,Val),check_type(Val,T),char_tree_to_atom(X,"",Id),
+    lookup_type(Id,Env,T1),T =@= T1,update(T,Id,Val,Env,NE).
+%assign_eval(t_assign(X,Y), Env, NE) :- 
+ %   bool_eval(Y,Env,Env,Val),check_type(Val,T),char_tree_to_atom(X,"",Id),
+  %  lookup_type(Id,E1,T1),T =@= T1,update(T,Id,Val,E1,NE).
+
+
+
+dec_eval(t_dec(X,Y),Env,NE):- 
+    char_tree_to_atom(Y,"",Id),\+(lookup(Id,Env,_)),
+    update(X,Id,_,Env,NE).
+dec_eval(t_int_dec(int,Y,Z),Env,NE):- 
+    char_tree_to_atom(Y,"",Id),\+(lookup(Id,Env,_)),
+    num_tree_to_num(Z,Val),update(int,Id,Val,Env,NE).
+dec_eval(t_str_dec(string,Y,Z),Env,NE):- 
+    char_tree_to_atom(Y,"",Id),\+(lookup(Id,Env,_)),
+    str_eval(Z,Env,Env,Val),update(string,Id,Val,Env,NE).
+dec_eval(t_bool_dec(bool,Y,true),Env,NE):- 
+    char_tree_to_atom(Y,"",Id),\+(lookup(Id,Env,_)),
+    update(bool,Id,true,Env,NE).
+dec_eval(t_bool_dec(bool,Y,false),Env,NE):- 
+    char_tree_to_atom(Y,"",Id),\+(lookup(Id,Env,_)),
+    update(bool,Id,false,Env,NE).
+
+
+
+print_eval(out(X),Env,Env) :- lookup(X,Env,Val),write(Val).
+print_eval(out(X),Env,Env) :- num_tree_to_num(X,Val),write(Val).
+print_eval(out(X),Env,Env) :- str_eval(X,Env,Env,Val),write(Val).
+
+eval_expr(X, Env, NE, Val) :- eval_term(X, Env, NE, Val).
+eval_expr(t_sub(X,Y), Env, NE, Val):-
+    eval_expr(X, Env, E1, Val1), eval_term(Y, E1, NE, Val2),
+    Val is Val1 - Val2.
+eval_term(X, Env, NE, Val) :- eval_term1(X, Env, NE, Val).
+eval_term(t_add(X,Y), Env, NE, Val):-
+    eval_term(X, Env, E1, Val1), eval_term1(Y, E1, NE, Val2),
+    Val is Val1 + Val2.
+eval_term1(X, Env, NE, Val) :- eval_term2(X, Env,NE, Val).
+eval_term1(t_mul(X,Y), Env, NE, Val):-
+    eval_term1(X, Env, E1, Val1), eval_term2(Y, E1, NE, Val2),
+    Val is Val1 * Val2.
+eval_term2(X, Env, NE, Val) :- eval_term3(X, Env, NE, Val).
+eval_term2(t_div(X,Y),  Env, NE, Val):-
+    eval_term2(X, Env, E1, Val1), eval_term3(Y, E1, NE, Val2),
+    Val is Val1 / Val2.
+eval_term3(X,  Env, Env, Val) :- eval_num(X, Env, Val).
+eval_term3(t_bracks(X), Env, NE, Val):- eval_expr(X, Env, NE, Val).
+
+eval_num(X, _Env, Val):- num_tree_to_num(X,Val).
+eval_num(t_id(I), Env, Val) :- lookup(I, Env, Val).
+
+str_eval(t_str(X),Env,Env,Val) :- char_tree_to_string(X,Val).
+
+check_type(Val,T) :- string(Val),T = string.
+check_type(Val,T) :- integer(Val),T = int.
+check_type(Val,T) :- (Val = true ; Val = false),T = bool.
