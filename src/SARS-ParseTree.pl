@@ -1,3 +1,4 @@
+:- use_rendering(svgtree).
 program(prog(X)) --> block(X).
 
 block(blk(X)) --> ['{'],block_part(X),['}'].
@@ -18,13 +19,13 @@ command(com(X)) -->for_range(X).
 command(com(X)) --> iterator(X),[;].
 
 :- table bool/3.
+
 bool(true) --> [true].
 bool(false) --> [false].
-bool(t_eq(X,Y)) --> expression(X), [=], expression(Y).
+%bool(t_eq(X,Y)) --> expression(X), [=], expression(Y).
 bool(t_not(X)) --> [not],['('],bool(X),[')'].
 bool(t_and(X,Y)) --> bool(X), [and], bool(Y).
 bool(t_or(X,Y)) --> bool(X), [or], bool(Y).
-bool(X) --> condition(X).
 
 declaration(t_int_dec(int,X,Y)) --> [int], id(X), [=], num(Y).
 declaration(t_str_dec(string,X,Y)) --> [string], id(X), [=], string(Y).
@@ -53,8 +54,7 @@ for_range(t_for_range(X,Y,Z,W)) --> [for], id(X), [in],[range],['('],id(Y),num(Z
 if(t_if(X,Y)) --> [if],['('],condition(X),[')'], block(Y) .
 if(t_if(X,Y,Z)) --> [if],['('],condition(X),[')'], block(Y), [else], block(Z).
 
-ternary(t_ternary(X,Y,Z,U,V)) --> expression(X), condition_operator(Y), expression(Z), [?], block(U), [:], block(V).
-ternary(t_ternary(X,Y,Z,U,V)) --> id(X), condition_operator(Y), string(Z), [?], block(U), [:], block(V).
+ternary(t_ternary(X,U,V)) --> condition(X), [?], block(U), [:], block(V).
 
 output(out(X)) --> [print], ['('], id(X),[')'].
 output(out(X)) --> [print], ['('], num(X),[')'].
@@ -208,9 +208,20 @@ letter_tree_help2(id1(X,Y),Buf,Res) :-
 letter_tree_help2(id1(X),Buf,Res) :- 
     ((number_tree2(X,T1),concat(Buf,T1,Res));concat(Buf,X,Res)).
 
+check_type(Val,T) :- string(Val),T = string.
+check_type(Val,T) :- integer(Val),T = int.
+check_type(Val,T) :- (Val = true ; Val = false),T = bool.
 
+not(true,false).
+not(false,true).
 
+and(false,_,false).
+and(_,false,false).
+and(true,true,true).
 
+or(true,_,true).
+or(_,true,true).
+or(false,false,false).
 
 
 lookup(Id, [(_Type,Id, X)|_], X).
@@ -232,21 +243,15 @@ bp_eval(bp(X),Env,FinalEnv) :- com_eval(X,Env,FinalEnv).
 
 com_eval(com(X),Env,FinalEnv) :- 
     dec_eval(X,Env,FinalEnv);assign_eval(X,Env,FinalEnv);
-    bool_eval(X,Env,FinalEnv);print_eval(X,Env,FinalEnv);
+    bool_eval(X,Env,FinalEnv,_Val);print_eval(X,Env,FinalEnv);
     if_eval(X,Env,FinalEnv);while_eval(X,Env,FinalEnv);
     for_eval(X,Env,FinalEnv);for_range_eval(X,Env,FinalEnv);
     ternary_eval(X,Env,FinalEnv);iter_eval(X,Env,FinalEnv).
 
-assign_eval(t_assign(X,Y), Env, NE) :- 
-    eval_expr(Y,Env,E1,Val),check_type(Val,T),char_tree_to_atom(X,"",Id),
-    lookup_type(Id,E1,T1),T =@= T1,update(T,Id,Val,E1,NE).
-assign_eval(t_assign(X,Y), Env, NE) :- 
-    str_eval(Y,Env,Env,Val),check_type(Val,T),char_tree_to_atom(X,"",Id),
-    lookup_type(Id,Env,T1),T =@= T1,update(T,Id,Val,Env,NE).
-%assign_eval(t_assign(X,Y), Env, NE) :- 
- %   bool_eval(Y,Env,Env,Val),check_type(Val,T),char_tree_to_atom(X,"",Id),
-  %  lookup_type(Id,E1,T1),T =@= T1,update(T,Id,Val,E1,NE).
-
+if_eval(_X,_Env,_FinalEnv).
+while_eval(_X,_Env,_FinalEnv).
+for_eval(_X,_Env,_FinalEnv).
+for_range_eval(_X,_Env,_FinalEnv).
 
 
 dec_eval(t_dec(X,Y),Env,NE):- 
@@ -265,11 +270,50 @@ dec_eval(t_bool_dec(bool,Y,false),Env,NE):-
     char_tree_to_atom(Y,"",Id),\+(lookup(Id,Env,_)),
     update(bool,Id,false,Env,NE).
 
+assign_eval(t_assign(X,Y), Env, NE) :- 
+    eval_expr(Y,Env,E1,Val),check_type(Val,T),char_tree_to_atom(X,"",Id),
+    lookup_type(Id,E1,T1),T =@= T1,update(T,Id,Val,E1,NE).
+assign_eval(t_assign(X,Y), Env, NE) :- 
+    str_eval(Y,Env,Env,Val),check_type(Val,T),char_tree_to_atom(X,"",Id),
+    lookup_type(Id,Env,T1),T =@= T1,update(T,Id,Val,Env,NE).
+assign_eval(t_assign(X,Y), Env, NE) :- 
+   bool_eval(Y,Env,Env,Val),check_type(Val,T),char_tree_to_atom(X,"",Id),
+   lookup_type(Id,E1,T1),T =@= T1,update(T,Id,Val,E1,NE).
+
+bool_eval(true,_E1,_NE,true).
+bool_eval(false,_E1,_NE,false).
+bool_eval(t_not(B),E,NE,Val) :- bool_eval(B,E,NE,Val1), not(Val1,Val).
+bool_eval(t_and(X,Y),E,NE,Val) :- bool_eval(X,E,NE,Val1),bool_eval(Y,E,NE,Val2), and(Val1,Val2,Val).
+bool_eval(t_or(X,Y),E,NE,Val) :- bool_eval(X,E,NE,Val1),bool_eval(Y,E,NE,Val2), or(Val1,Val2,Val).
+
+con_eval(t_cond(X,==,Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),eval_expr(Y,E,NE,Val2),
+    (( Val1 =:= Val2, Val = true);( \+(Val1 =:= Val2),Val = false)).
+con_eval(t_cond(X,'!=',Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),eval_expr(Y,E,NE,Val2),
+    (( Val1 =\= Val2, Val = true);( \+(Val1 =\= Val2),Val = false)).
+con_eval(t_cond(X,'>',Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),eval_expr(Y,E,NE,Val2),
+    (( Val1 > Val2, Val = true);( \+(Val1 > Val2),Val = false)).
+con_eval(t_cond(X,'<',Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),eval_expr(Y,E,NE,Val2),
+    (( Val1 < Val2, Val = true);( \+(Val1 < Val2),Val = false)).
+con_eval(t_cond(X,'>=',Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),eval_expr(Y,E,NE,Val2),
+    (( Val1 >= Val2, Val = true);( \+(Val1 >= Val2),Val = false)).
+con_eval(t_cond(X,'<=',Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),eval_expr(Y,E,NE,Val2),
+    (( Val1 =< Val2, Val = true);( \+(Val1 =< Val2),Val = false)).
 
 
 print_eval(out(X),Env,Env) :- lookup(X,Env,Val),write(Val).
 print_eval(out(X),Env,Env) :- num_tree_to_num(X,Val),write(Val).
 print_eval(out(X),Env,Env) :- str_eval(X,Env,Env,Val),write(Val).
+
+ternary_eval(t_ternary(X,Y,_Z),Env,FinalEnv):- con_eval(X,Env,NE,true),block_eval(Y,NE,FinalEnv).
+ternary_eval(t_ternary(X,_Y,Z),Env,FinalEnv):- con_eval(X,Env,NE,false),block_eval(Z,NE,FinalEnv).
+
+iter_eval(t_plus(X),Env,NE) :- 
+    char_tree_to_atom(X,"",Id),lookup_type(Id,Env,int),
+    lookup(Id,Env,Val),Val1 is Val + 1, update(int,Id,Val1,Env,NE).
+
+iter_eval(t_minus(X),Env,NE) :- 
+    char_tree_to_atom(X,"",Id),lookup_type(Id,Env,int),
+    lookup(Id,Env,Val),Val1 is Val - 1, update(int,Id,Val1,Env,NE).
 
 eval_expr(X, Env, NE, Val) :- eval_term(X, Env, NE, Val).
 eval_expr(t_sub(X,Y), Env, NE, Val):-
@@ -291,10 +335,6 @@ eval_term3(X,  Env, Env, Val) :- eval_num(X, Env, Val).
 eval_term3(t_bracks(X), Env, NE, Val):- eval_expr(X, Env, NE, Val).
 
 eval_num(X, _Env, Val):- num_tree_to_num(X,Val).
-eval_num(t_id(I), Env, Val) :- lookup(I, Env, Val).
+eval_num(I, Env, Val) :- char_tree_to_atom(I,"",Id),lookup(Id, Env, Val).
 
 str_eval(t_str(X),Env,Env,Val) :- char_tree_to_string(X,Val).
-
-check_type(Val,T) :- string(Val),T = string.
-check_type(Val,T) :- integer(Val),T = int.
-check_type(Val,T) :- (Val = true ; Val = false),T = bool.
