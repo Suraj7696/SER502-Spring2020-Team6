@@ -335,7 +335,7 @@ if_eval(t_if(X,Y,_Z),Env,FinalEnv):- con_eval(X,Env,NE,true),block_eval(Y,NE,Fin
 if_eval(t_if(X,_Y,Z),Env,FinalEnv):- con_eval(X,Env,NE,false),block_eval(Z,NE,FinalEnv).
 
 while_eval(t_while(X,Y),Env,FinalEnv):- 
-    con_eval(X,Env,NE,true),block_eval(Y,Env,NE),while_eval(t_while(X,Y),NE,FinalEnv).
+    con_eval(X,Env,NE,true),block_eval(Y,NE,NE1),while_eval(t_while(X,Y),NE1,FinalEnv).
 while_eval(t_while(X,_Y),Env,Env) :- con_eval(X,Env,Env,false).
 
 for_eval(t_for(X,Y,Z,W),Env,FinalEnv):- 
