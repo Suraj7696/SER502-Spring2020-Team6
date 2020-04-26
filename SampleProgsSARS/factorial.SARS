@@ -1,7 +1,7 @@
 begin
 {
  int temp;
- Int x=5;   
+ int x=5;   
  temp = 1;
  while(x > 0)
 {
