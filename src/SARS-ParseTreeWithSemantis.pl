@@ -1,4 +1,4 @@
-program(prog(X)) --> block(X).
+program(prog(X)) -->[begin], block(X),[end].
 
 block(blk(X)) --> ['{'],block_part(X),['}'].
 
@@ -165,7 +165,7 @@ upperchar('W') --> ['W'].
 upperchar('X') --> ['X'].
 upperchar('Y') --> ['Y'].
 upperchar('Z') --> ['Z'].
-
+%-------------------HELPER FUNCTIONS FOR SEMANTICS --------------------------
 num_tree_to_num(X,N):- num_tree(X,0,N).
 num_tree(t_num(X,Y),Prefix,N) :- 
     Prefix1 is Prefix*10 + X,
@@ -177,6 +177,9 @@ char_tree_to_string(X,Res) :- char_tree(X,"",Res).
 char_tree(op(X,Y),Bfr,Res) :- 
     (letter_tree(X,A1);number_tree(X,A1)),
     string_concat(Bfr,A1,Bfr1),char_tree(Y,Bfr1,Res).
+char_tree(op(X),Bfr,Res) :- 
+    (letter_tree(X,A1);number_tree(X,A1)),
+    string_concat(Bfr,A1,Res).
 char_tree(op(t),Bfr,Res):- string_concat(Bfr,"",Res).
 
 letter_tree(X,Res) :- letter_tree_help(X,"",Res).
@@ -221,8 +224,7 @@ and(true,true,true).
 or(true,_,true).
 or(_,true,true).
 or(false,false,false).
-
-
+%------------------------------- ENVIRONMENT MANIPULATIONS----------------------
 lookup(Id, [(_Type,Id, X)|_], X).
 lookup(Id, [_|T], X) :- lookup(Id, T, X).
 
@@ -232,7 +234,7 @@ lookup_type(Id,[(Type,Id,_X)|_],Type).
 update(Type,Id, Val, [], [(Type,Id, Val)]).
 update(Type,Id, Val, [(Type,Id,_)|T], [(Type,Id, Val)|T]).
 update(Type,Id, Val, [H|T], [H|R]) :- update(Type,Id, Val, T, R).
-
+%---------------------------------- SEMANTICS ------------------------------------
 program_semantics(prog(X),FinalEnv) :- block_eval(X,[],FinalEnv).
 
 block_eval(blk(X),Env,FinalEnv) :- bp_eval(X,Env,FinalEnv).
@@ -244,39 +246,8 @@ com_eval(com(X),Env,FinalEnv) :-
     dec_eval(X,Env,FinalEnv);assign_eval(X,Env,FinalEnv);
     bool_eval(X,Env,FinalEnv,_Val);print_eval(X,Env,FinalEnv);
     if_eval(X,Env,FinalEnv);while_eval(X,Env,FinalEnv);
-    for_eval(X,Env,FinalEnv);%for_range_eval(X,Env,FinalEnv);
+    for_eval(X,Env,FinalEnv);for_range_eval(X,Env,FinalEnv);
     ternary_eval(X,Env,FinalEnv);iter_eval(X,Env,FinalEnv).
-
-if_eval(t_if(X,Y),Env,FinalEnv):- (con_eval(X,Env,NE,true),block_eval(Y,NE,FinalEnv));(con_eval(X,Env,FinalEnv,false),write(failed)).
-if_eval(t_if(X,Y,_Z),Env,FinalEnv):- con_eval(X,Env,NE,true),block_eval(Y,NE,FinalEnv).
-if_eval(t_if(X,_Y,Z),Env,FinalEnv):- con_eval(X,Env,NE,false),block_eval(Z,NE,FinalEnv).
-
-while_eval(t_while(X,Y),Env,FinalEnv):- 
-    con_eval(X,Env,NE,true),block_eval(Y,Env,NE),while_eval(t_while(X,Y),NE,FinalEnv).
-while_eval(t_while(X,_Y),Env,Env) :- con_eval(X,Env,Env,false).
-
-for_eval(t_for(X,Y,Z,W),Env,FinalEnv):- 
-    assign_eval(X,Env,NE),looper(Y,Z,W,NE,FinalEnv).
-looper(X,Y,Z,Env,FinalEnv) :- 
-    con_eval(X,Env,Env,true),block_eval(Z,Env,NE),
-    iter_eval(Y,NE,NE1),looper(X,Y,Z,NE1,FinalEnv).
-looper(X,_Y,_Z,Env,Env) :- con_eval(X,Env,Env,false).
-
-for_range_eval(t_for_range(X,Y,Z,W),Env,FinalEnv):- 
-    char_tree_to_atom(X,"",Id),
-    ((num_tree_to_num(Y,Val),update(int,Id,Val,Env,NE));
-    (char_tree_to_atom(Y,"",Id1),lookup(Id1,Env,Val),update(int,Id,Val,Env,NE))),
-    ((num_tree_to_num(Z,N));
-    (char_tree_to_atom(Z,"",Id1),lookup(Id1,NE,N))),
-    looper2(Id,N,W,NE,FinalEnv).
-
-looper2(X,Z,W,Env,FinalEnv):- 
-    lookup(X,Env,Val),Val < Z, block_eval(W,Env,NE),Val1 is Val + 1,
-    update(int, X, Val1, NE, NE1),looper2(X,Val1,W,NE1,FinalEnv).
-looper2(X,Z,_W,Env,Env) :- 
-    lookup(X,Env,Val), Val >= Z.
-    
-
 
 dec_eval(t_dec(X,Y),Env,NE):- 
     char_tree_to_atom(Y,"",Id),\+(lookup(Id,Env,_)),
@@ -355,9 +326,38 @@ con_eval(t_cond(X,'<=',Y),E,NE,_Val) :- char_tree_to_atom(X,"",Id),lookup(Id,E,V
 
 
 
-print_eval(out(X),Env,Env) :- char_tree_to_atom(X,"",Id),lookup(Id,Env,Val),write(Val).
-print_eval(out(X),Env,Env) :- num_tree_to_num(X,Val),write(Val).
-print_eval(out(X),Env,Env) :- str_eval(X,Env,Env,Val),write(Val).
+print_eval(out(X),Env,Env) :- char_tree_to_atom(X,"",Id),lookup(Id,Env,Val),writeln(Val).
+print_eval(out(X),Env,Env) :- num_tree_to_num(X,Val),writeln(Val).
+print_eval(out(X),Env,Env) :- str_eval(X,Env,Env,Val),writeln(Val).
+
+if_eval(t_if(X,Y),Env,FinalEnv):- (con_eval(X,Env,NE,true),block_eval(Y,NE,FinalEnv));(con_eval(X,Env,FinalEnv,false),write(failed)).
+if_eval(t_if(X,Y,_Z),Env,FinalEnv):- con_eval(X,Env,NE,true),block_eval(Y,NE,FinalEnv).
+if_eval(t_if(X,_Y,Z),Env,FinalEnv):- con_eval(X,Env,NE,false),block_eval(Z,NE,FinalEnv).
+
+while_eval(t_while(X,Y),Env,FinalEnv):- 
+    con_eval(X,Env,NE,true),block_eval(Y,Env,NE),while_eval(t_while(X,Y),NE,FinalEnv).
+while_eval(t_while(X,_Y),Env,Env) :- con_eval(X,Env,Env,false).
+
+for_eval(t_for(X,Y,Z,W),Env,FinalEnv):- 
+    assign_eval(X,Env,NE),looper(Y,Z,W,NE,FinalEnv).
+looper(X,Y,Z,Env,FinalEnv) :- 
+    con_eval(X,Env,Env,true),block_eval(Z,Env,NE),
+    iter_eval(Y,NE,NE1),looper(X,Y,Z,NE1,FinalEnv).
+looper(X,_Y,_Z,Env,Env) :- con_eval(X,Env,Env,false).
+
+for_range_eval(t_for_range(X,Y,Z,W),Env,FinalEnv):- 
+    char_tree_to_atom(X,"",Id),
+    ((num_tree_to_num(Y,Val),update(int,Id,Val,Env,NE));
+    (char_tree_to_atom(Y,"",Id1),lookup(Id1,Env,Val),update(int,Id,Val,Env,NE))),
+    ((num_tree_to_num(Z,N));
+    (char_tree_to_atom(Z,"",Id1),lookup(Id1,NE,N))),
+    looper2(Id,N,W,NE,FinalEnv).
+
+looper2(X,Z,W,Env,FinalEnv):- 
+    lookup(X,Env,Val),Val < Z, block_eval(W,Env,NE),Val1 is Val + 1,
+    update(int, X, Val1, NE, NE1),looper2(X,Z,W,NE1,FinalEnv).
+looper2(X,Z,_W,Env,Env) :- 
+    lookup(X,Env,Val), Val >= Z.
 
 ternary_eval(t_ternary(X,Y,_Z),Env,FinalEnv):- con_eval(X,Env,NE,true),block_eval(Y,NE,FinalEnv).
 ternary_eval(t_ternary(X,_Y,Z),Env,FinalEnv):- con_eval(X,Env,NE,false),block_eval(Z,NE,FinalEnv).
@@ -386,10 +386,11 @@ eval_term2(X, Env, NE, Val) :- eval_term3(X, Env, NE, Val).
 eval_term2(t_div(X,Y),  Env, NE, Val):-
     eval_term2(X, Env, E1, Val1), eval_term3(Y, E1, NE, Val2),
     Val is Val1 / Val2.
-eval_term3(X,  Env, Env, Val) :- eval_num(X, Env, Val).
+eval_term3(X,  Env, NE, Val) :- eval_num(X, Env,NE, Val).
 eval_term3(t_bracks(X), Env, NE, Val):- eval_expr(X, Env, NE, Val).
 
-eval_num(X, _Env, Val):- num_tree_to_num(X,Val).
-eval_num(I, Env, Val) :- char_tree_to_atom(I,"",Id),lookup(Id, Env, Val).
+eval_num(X, Env,Env, Val):- num_tree_to_num(X,Val).
+eval_num(I, Env,Env, Val) :- char_tree_to_atom(I,"",Id),lookup(Id, Env, Val).
 
 str_eval(t_str(X),Env,Env,Val) :- char_tree_to_string(X,Val).
+%---------------------------------------------------------------------------

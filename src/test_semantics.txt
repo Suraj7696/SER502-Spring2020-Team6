@@ -1,0 +1,8 @@
+/** <examples>
+?- program(T,[begin,'{',string,a,'B',=,'\"',2,'S',p,1,'\"',;,string,a,=,'\"',4,'\"',;,print,'(',a,'B',')',;,print,'(',a,')',;,'}',end],[]),program_semantics(T,Fin).
+?- program(T,[begin,'{',int,x,=,2,;,int,y,=,3,;,int, z,;,z,=,x,+,y,;,'}',end],[]),program_semantics(T,Final).
+?- program(T,[begin,'{',int,x,=,5,;,int,i,;,int,y,=,1,;,if,'(',x,'<',y,')','{',x,++,;,'}',else,'{',x,--,;,'}','}',end],[]),program_semantics(T,Final).
+?- program(T,[begin,'{',int,x,=,0,;,while,'(',x,'<',1,0,')','{',print,'(',x,')',;,x,++,;,'}','}',end],[]),program_semantics(T,Final).
+?- program(T,[begin,'{',int,x,;,for,'(',x,=,0,;,x,'<',1,0,;,x,++,;,')','{',print,'(',x,')',;,'}','}',end],[]),program_semantics(T,Final).
+?- program(T,[begin,'{',int,x,;, for, x, in, range,'(',0,:,1,0,')','{',print,'(',x,')',;,'}','}',end],[]),program_semantics(T,F).
+*/
