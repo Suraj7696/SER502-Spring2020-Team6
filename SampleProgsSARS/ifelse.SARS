@@ -1,0 +1,18 @@
+begin
+{
+
+int x;
+int y;
+read x;
+read y;
+if(x >= y) 
+{
+print(x);
+}
+else 
+{
+print(y);
+}
+
+}
+end.
