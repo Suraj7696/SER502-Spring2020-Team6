@@ -4,7 +4,7 @@ begin
  int y=3;
  int z;
  z = 0;
-while( not z == 6) 
+while( not (z == 6)) 
 { 
 y = x / 3;
 if( y == 1) 
