@@ -69,7 +69,7 @@ condition(t_cond(X,Y,Z)) --> expression(X), condition_operator(Y), expression(Z)
 condition(t_cond(X,Y,Z)) --> string(X), condition_operator(Y), string(Z).
 condition(t_cond(X,Y,Z)) --> id(X), condition_operator(Y), string(Z).
 
-condition_operator(==) --> [==].
+condition_operator('==') --> ['=='].
 condition_operator('!=') --> ['!='].
 condition_operator('>') --> ['>'].
 condition_operator('<') --> ['<'].
