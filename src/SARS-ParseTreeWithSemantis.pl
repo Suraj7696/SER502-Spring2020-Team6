@@ -21,11 +21,13 @@ command(com(X)) --> iterator(X),[;].
 
 bool(true) --> [true].
 bool(false) --> [false].
-%bool(t_eq(X,Y)) --> expression(X), [=], expression(Y).
 bool(t_not(X)) --> [not],['('],bool(X),[')'].
 bool(t_not(X)) --> [not],['('],condition(X),[')'].
 bool(t_and(X,Y)) --> bool(X), [and], bool(Y).
+bool(t_and(X,Y)) --> ['('],condition(X),[')'], [and], ['('],condition(Y),[')'].
 bool(t_or(X,Y)) --> bool(X), [or], bool(Y).
+bool(t_or(X,Y)) --> ['('],condition(X),[')'], [or], ['('],condition(Y),[')'].
+
 
 
 declaration(t_int_dec(int,X,Y)) --> [int], id(X), [=], expression(Y).
@@ -47,7 +49,7 @@ for(t_for(X,Y,Z,W)) -->[for],['('],declaration(X),[;],condition(Y),[;],expressio
 for(t_for(X,Y,Z,W)) --> [for],['('],assignment(X),[;],condition(Y),[;],iterator(Z),[;],[')'],block(W).
 for(t_for(X,Y,Z,W)) -->[for],['('],assignment(X),[;],condition(Y),[;],expression(Z),[;],[')'],block(W).
 
-while(t_while(X,Y)) --> [while], ['('], condition(X),[')'], block(Y).
+while(t_while(X,Y)) --> [while], ['('],(condition(X);bool(X)),[')'], block(Y).
 
 for_range(t_for_range(X,Y,Z,W)) --> [for], id(X), [in],[range],['('],num(Y),[:],num(Z),[')'],block(W).
 for_range(t_for_range(X,Y,Z,W)) --> [for], id(X), [in],[range],['('],id(Y),[:],id(Z),[')'],block(W).
@@ -286,26 +288,28 @@ assign_eval(t_assign(X,Y), Env, NE) :-
 
 bool_eval(true,_E1,_NE,true).
 bool_eval(false,_E1,_NE,false).
-bool_eval(t_not(B),E,NE,Val) :- (bool_eval(B,E,NE,Val1);con_eval(B,E,NE,Val1)), not(Val1,Val).
+bool_eval(t_not(B),E,NE,Val) :- (bool_eval(B,E,NE,Val1);con_eval(B,E,NE,Val1)), not(Val1,Val2), Val = Val2.
 bool_eval(t_and(X,Y),E,NE,Val) :- bool_eval(X,E,NE,Val1),bool_eval(Y,E,NE,Val2), and(Val1,Val2,Val).
+bool_eval(t_and(X,Y),E,NE,Val) :- con_eval(X,E,NE,Val1),con_eval(Y,E,NE,Val2), and(Val1,Val2,Val).
 bool_eval(t_or(X,Y),E,NE,Val) :- bool_eval(X,E,NE,Val1),bool_eval(Y,E,NE,Val2), or(Val1,Val2,Val).
+bool_eval(t_or(X,Y),E,NE,Val) :- con_eval(X,E,NE,Val1),con_eval(Y,E,NE,Val2), or(Val1,Val2,Val).
 
 con_eval(t_cond(X,==,Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),eval_expr(Y,E,NE,Val2),
-    (( Val1 =:= Val2, Val = true); Val = false).
+    (( Val1 =:= Val2, Val = true); ( \+(Val1 =:= Val2), Val = false)).
 con_eval(t_cond(X,'!=',Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),eval_expr(Y,E,NE,Val2),
-    (( Val1 =\= Val2, Val = true);Val = false).
+    (( Val1 =\= Val2, Val = true);( \+(Val1 =\= Val2), Val = false)).
 con_eval(t_cond(X,'>',Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),eval_expr(Y,E,NE,Val2),
-    (( Val1 > Val2, Val = true);Val = false).
+    (( Val1 > Val2, Val = true);( \+(Val1 > Val2), Val = false)).
 con_eval(t_cond(X,'<',Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),eval_expr(Y,E,NE,Val2),
-    (( Val1 < Val2, Val = true);Val = false).
+    (( Val1 < Val2, Val = true);( \+(Val1 < Val2), Val = false)).
 con_eval(t_cond(X,'>=',Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),eval_expr(Y,E,NE,Val2),
-    (( Val1 >= Val2, Val = true);Val = false).
+    (( Val1 >= Val2, Val = true);( \+(Val1 >= Val2), Val = false)).
 con_eval(t_cond(X,'<=',Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),eval_expr(Y,E,NE,Val2),
-    (( Val1 =< Val2, Val = true);Val = false).
+    (( Val1 =< Val2, Val = true);( \+(Val1 =< Val2), Val = false)).
 con_eval(t_cond(X,==,Y),E,NE,Val) :- str_eval(X,E,NE,Val1),str_eval(Y,E,NE,Val2),
-    ((Val1 = Val2, Val = true);Val = false).
+    ((Val1 = Val2, Val = true);(\+(Val1 = Val2), Val = false)).
 con_eval(t_cond(X,'!=',Y),E,NE,Val) :- str_eval(X,E,NE,Val1),str_eval(Y,E,NE,Val2),
-    ((Val1 = Val2, Val = false);Val = true).
+    ((Val1 = Val2, Val = false);(\+(Val1 = Val2), Val = true)).
 con_eval(t_cond(X,'>',Y),E,NE,_Val) :- str_eval(X,E,NE,_Val1),str_eval(Y,E,NE,_Val2),
     write("cannot perform this operation on strings").
 con_eval(t_cond(X,'<',Y),E,NE,_Val) :- str_eval(X,E,NE,_Val1),str_eval(Y,E,NE,_Val2),
@@ -316,10 +320,10 @@ con_eval(t_cond(X,'<=',Y),E,NE,_Val) :- str_eval(X,E,NE,_Val1),str_eval(Y,E,NE,_
     write("cannot perform this operation on strings").
 con_eval(t_cond(X,==,Y),E,NE,Val) :- char_tree_to_atom(X,"",Id),lookup(Id,E,Val1),check_type(Val1,T),
     T=string,str_eval(Y,E,NE,Val2),
-    ((Val1 =@= Val2, Val = true);Val = false).
+    ((Val1 =@= Val2, Val = true);(\+(Val1 =@= Val2), Val = false)).
 con_eval(t_cond(X,'!=',Y),E,NE,Val) :- char_tree_to_atom(X,"",Id),lookup(Id,E,Val1),check_type(Val1,T),
     T=string,str_eval(Y,E,NE,Val2),
-    ((Val1 = Val2, Val = false);Val = true).
+    ((Val1 = Val2, Val = false);(\+(Val1 = Val2), Val = true)).
 con_eval(t_cond(X,'>',Y),E,NE,_Val) :- char_tree_to_atom(X,"",Id),lookup(Id,E,Val1),check_type(Val1,T),
     T=string,str_eval(Y,E,NE,_Val2),
     write("cannot perform this operation on strings").
@@ -342,6 +346,10 @@ print_eval(out(X),Env,Env) :- str_eval(X,Env,Env,Val),writeln(Val).
 if_eval(t_if(X,Y),Env,FinalEnv):- (con_eval(X,Env,NE,true),block_eval(Y,NE,FinalEnv));(con_eval(X,Env,FinalEnv,false),write(failed)).
 if_eval(t_if(X,Y,_Z),Env,FinalEnv):- con_eval(X,Env,NE,true),block_eval(Y,NE,FinalEnv).
 if_eval(t_if(X,_Y,Z),Env,FinalEnv):- con_eval(X,Env,NE,false),block_eval(Z,NE,FinalEnv).
+
+while_eval(t_while(X,Y),Env,FinalEnv):- 
+    bool_eval(X,Env,NE,true),block_eval(Y,NE,NE1),while_eval(t_while(X,Y),NE1,FinalEnv).
+while_eval(t_while(X,_Y),Env,Env) :- bool_eval(X,Env,Env,false).
 
 while_eval(t_while(X,Y),Env,FinalEnv):- 
     con_eval(X,Env,NE,true),block_eval(Y,NE,NE1),while_eval(t_while(X,Y),NE1,FinalEnv).
