@@ -33,7 +33,7 @@ def Lexer(filename):
                 print(each)
                 continue
         
-        
+        # This is to handle the for loop in both cases
         cond = ''
         i = 0
         while i < len(token):
