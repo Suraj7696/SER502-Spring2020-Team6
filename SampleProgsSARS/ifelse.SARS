@@ -3,8 +3,8 @@ begin
 
 int x;
 int y;
-read x;
-read y;
+x = 5;
+y = 8;
 if(x >= y) 
 {
 print(x);
