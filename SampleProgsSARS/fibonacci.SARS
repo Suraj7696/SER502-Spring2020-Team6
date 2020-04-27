@@ -9,7 +9,7 @@ while (counter < 5)
     int temp = a;
     a = b;
     b = temp + b;
-    print( a);
+    print(a);
     counter = counter + 1;
 }
 
