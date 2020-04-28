@@ -33,7 +33,6 @@ def Lexer(filename):
                 print(each)
                 continue
         
-        
         cond = ''
         i = 0
         while i < len(token):
@@ -98,6 +97,26 @@ def Lexer(filename):
                             # print(token[i:])
                     except:
                         continue
+                if token[i] == '+':
+                    try:
+                        if token[i+1] == '+':
+                            ts = token[i]+token[i+1]
+                            var.append(ts)
+                            # print(token[i:])
+                            i += 2
+                            # print(token[i:])
+                    except:
+                        continue
+                if token[i] == '-':
+                    try:
+                        if token[i+1] == '-':
+                            ts = token[i]+token[i+1]
+                            var.append(ts)
+                            # print(token[i:])
+                            i += 2
+                            # print(token[i:])
+                    except:
+                        continue
                 var.append(token[i])
                 # print(var)
                 try:
@@ -128,5 +147,5 @@ def Lexer(filename):
 
 
 if __name__ == "__main__":
-    tokens = Lexer("forRange.SARS")
+    tokens = Lexer("forloop1.SARS")
     print(tokens)
