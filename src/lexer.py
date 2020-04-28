@@ -33,7 +33,7 @@ def Lexer(filename):
                 print(each)
                 continue
         
-        # This is to handle the for loop in both cases
+        
         cond = ''
         i = 0
         while i < len(token):
@@ -58,4 +58,70 @@ def Lexer(filename):
             else:
                 cond += token[i]
             i+=1
- 
+        var = []    
+        i = 0
+        x = ''
+        while i < len(token):
+            if x == '(ot':
+                tokenlist.append('(')
+                tokenlist.append('not')
+                token = token[i+1:]
+                i = 0
+                x = ''
+            elif x == 'not':
+                tokenlist.append(x)
+                token = token[i+1:]
+                i = 0
+                x = ''
+            elif x == '(nt':
+                tokenlist.append('(')
+                tokenlist.append('int')
+                var = []
+                token = token[i:]
+                i = 0
+                x = ''
+            else:
+                x += token[i]
+            if token[i] in specialChar:
+                if token[:i] != '':
+                    var.append(token[:i])
+                    # print(token[:i])
+                    # print(var)
+                if token[i] == '<' or token[i] == '>' or token[i] == '=':
+                    try:
+                        if token[i+1] == '=':
+                            ts = token[i]+token[i+1]
+                            var.append(ts)
+                            # print(token[i:])
+                            i += 2
+                            # print(token[i:])
+                    except:
+                        continue
+                var.append(token[i])
+                # print(var)
+                try:
+                    token[i:] == int(token[i:])
+                    # print(token[i:])
+                    var.append(token[i+1:])
+                    token = token[i+4:]
+                except ValueError:
+                    # print(token[i+1:])
+                    token = token[i+1:]
+                    # print(var)
+                    i = 0
+            i+=1
+        # print(var)
+        for i in var:
+            tokenlist.append(i)
+
+        if token != '':
+            tokenlist.append(token)
+        
+        token = ''
+
+    return tokenlist
+
+
+if __name__ == "__main__":
+    tokens = Lexer("forRange.SARS")
+    print(tokens)
