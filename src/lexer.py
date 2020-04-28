@@ -81,6 +81,7 @@ def Lexer(filename):
                 i = 0
                 x = ''
             else:
+                
                 x += token[i]
             if token[i] in specialChar:
                 if token[:i] != '':
@@ -112,7 +113,11 @@ def Lexer(filename):
             i+=1
         # print(var)
         for i in var:
-            tokenlist.append(i)
+            try:
+                i == int(i)
+                tokenlist.append(int(i))
+            except:
+                tokenlist.append(i)
 
         if token != '':
             tokenlist.append(token)
