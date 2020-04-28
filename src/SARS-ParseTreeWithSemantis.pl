@@ -43,10 +43,10 @@ type(int) --> ['int'].
 type(string) -->['string'].
 type(bool) --> ['bool'].
 
-for(t_for(X,Y,Z,W)) --> ['for'],['('],declaration(X),[';'],condition(Y),[';'],iterator(Z),[')'],block(W).
-for(t_for(X,Y,Z,W)) -->['for'],['('],declaration(X),[';'],condition(Y),[';'],expression(Z),[')'],block(W).
-for(t_for(X,Y,Z,W)) --> ['for'],['('],assignment(X),[';'],condition(Y),[';'],iterator(Z),[')'],block(W).
-for(t_for(X,Y,Z,W)) -->['for'],['('],assignment(X),[';'],condition(Y),[';'],expression(Z),[')'],block(W).
+for(t_for(X,Y,Z,W)) --> ['for'],['('],declaration(X),[';'],(condition(Y);bool(Y)),[';'],iterator(Z),[')'],block(W).
+for(t_for(X,Y,Z,W)) -->['for'],['('],declaration(X),[';'],(condition(Y);bool(Y)),[';'],assignment(Z),[')'],block(W).
+for(t_for(X,Y,Z,W)) --> ['for'],['('],assignment(X),[';'],(condition(Y);bool(Y)),[';'],iterator(Z),[')'],block(W).
+for(t_for(X,Y,Z,W)) -->['for'],['('],assignment(X),[';'],(condition(Y);bool(Y)),[';'],expression(Z),[')'],block(W).
 
 while(t_while(X,Y)) --> ['while'], ['('],(condition(X);bool(X)),[')'], block(Y).
 
@@ -55,10 +55,10 @@ for_range(t_for_range(X,Y,Z,W)) --> ['for'], id(X), ['in'],['range'],['('],id(Y)
 for_range(t_for_range(X,Y,Z,W)) --> ['for'], id(X), ['in'],['range'],['('],num(Y),[':'],id(Z),[')'],block(W).
 for_range(t_for_range(X,Y,Z,W)) --> ['for'], id(X), ['in'],['range'],['('],id(Y),[':'],num(Z),[')'],block(W).
 
-if(t_if(X,Y)) --> ['if'],['('],condition(X),[')'], block(Y) .
-if(t_if(X,Y,Z)) --> ['if'],['('],condition(X),[')'], block(Y), ['else'], block(Z).
+if(t_if(X,Y)) --> ['if'],['('],(condition(X);bool(X)),[')'], block(Y) .
+if(t_if(X,Y,Z)) --> ['if'],['('],(condition(X);bool(X)),[')'], block(Y), ['else'], block(Z).
 
-ternary(t_ternary(X,U,V)) --> condition(X), ['?'], command(U), [':'], command(V).
+ternary(t_ternary(X,U,V)) --> (condition(X);bool(X)), ['?'], command(U), [':'], command(V).
 
 output(out(X)) --> ['print'], ['('], id(X),[')'].
 output(out(X)) --> ['print'], ['('], num(X),[')'].
@@ -78,7 +78,6 @@ condition_operator(>=) --> ['>='].
 condition_operator(<=) --> ['<='].
 
 :- table expression/3,term/3.
-expression(X) --> assignment(X).
 expression(t_add(X,Y)) --> expression(X), ['+'], term(Y).
 expression(t_sub(X,Y)) --> expression(X), ['-'], term(Y).
 expression(X) --> term(X).
@@ -221,9 +220,10 @@ print_eval(out(X),Env,Env) :- char_tree_to_atom(X,Id),lookup(Id,Env,Val),writeln
 print_eval(out(X),Env,Env) :- num_tree(X,Val),writeln(Val).
 print_eval(out(X),Env,Env) :- str_eval(X,Env,Env,Val),writeln(Val).
 
-if_eval(t_if(X,Y),Env,FinalEnv):- (con_eval(X,Env,NE,true),block_eval(Y,NE,FinalEnv));(con_eval(X,Env,FinalEnv,false),write(failed)).
-if_eval(t_if(X,Y,_Z),Env,FinalEnv):- con_eval(X,Env,NE,true),block_eval(Y,NE,FinalEnv).
-if_eval(t_if(X,_Y,Z),Env,FinalEnv):- con_eval(X,Env,NE,false),block_eval(Z,NE,FinalEnv).
+if_eval(t_if(X,Y),Env,FinalEnv):- ((con_eval(X,Env,NE,true);bool_eval(X,Env,NE,true)),block_eval(Y,NE,FinalEnv)).
+if_eval(t_if(X,_Y),Env,NE):- con_eval(X,Env,NE,false);bool_eval(X,Env,NE,false).
+if_eval(t_if(X,Y,_Z),Env,FinalEnv):- (con_eval(X,Env,NE,true);bool_eval(X,Env,NE,true)),block_eval(Y,NE,FinalEnv).
+if_eval(t_if(X,_Y,Z),Env,FinalEnv):- (con_eval(X,Env,NE,false);bool_eval(X,Env,NE,false)),block_eval(Z,NE,FinalEnv).
 
 while_eval(t_while(X,Y),Env,FinalEnv):- 
     bool_eval(X,Env,NE,true),block_eval(Y,NE,NE1),while_eval(t_while(X,Y),NE1,FinalEnv).
@@ -241,6 +241,10 @@ looper(X,Y,Z,Env,FinalEnv) :-
     con_eval(X,Env,Env,true),block_eval(Z,Env,NE),
     (iter_eval(Y,NE,NE1);eval_expr(Y,NE,NE1)),looper(X,Y,Z,NE1,FinalEnv).
 looper(X,_Y,_Z,Env,Env) :- con_eval(X,Env,Env,false).
+looper(X,Y,Z,Env,FinalEnv) :- 
+    bool_eval(X,Env,Env,true),block_eval(Z,Env,NE),
+    (iter_eval(Y,NE,NE1);eval_expr(Y,NE,NE1)),looper(X,Y,Z,NE1,FinalEnv).
+looper(X,_Y,_Z,Env,Env) :- bool_eval(X,Env,Env,false).
 
 for_range_eval(t_for_range(X,Y,Z,W),Env,FinalEnv):- 
     char_tree_to_atom(X,Id),
@@ -256,8 +260,8 @@ looper2(X,Z,W,Env,FinalEnv):-
 looper2(X,Z,_W,Env,Env) :- 
     lookup(X,Env,Val), Val >= Z.
 
-ternary_eval(t_ternary(X,Y,_Z),Env,FinalEnv):- con_eval(X,Env,NE,true),block_eval(Y,NE,FinalEnv).
-ternary_eval(t_ternary(X,_Y,Z),Env,FinalEnv):- con_eval(X,Env,NE,false),block_eval(Z,NE,FinalEnv).
+ternary_eval(t_ternary(X,Y,_Z),Env,FinalEnv):- (con_eval(X,Env,NE,true);bool_eval(X,Env,NE,true)),com_eval(Y,NE,FinalEnv).
+ternary_eval(t_ternary(X,_Y,Z),Env,FinalEnv):- (con_eval(X,Env,NE,false);bool_eval(X,Env,NE,false)),com_eval(Z,NE,FinalEnv).
 
 iter_eval(t_plus(X),Env,NE) :- 
     char_tree_to_atom(X,Id),lookup_type(Id,Env,int),lookup(Id,Env,Val),
@@ -292,3 +296,10 @@ eval_num(id(I), Env,Env, Val) :- term_to_atom(Id,I),lookup(Id, Env, Val).
 num_tree(t_num(Val),Val).
 char_tree_to_atom(id(I),Id):- term_to_atom(Id,I).
 str_eval(op(I), Env,Env, Val) :- atom_string(I,Val).
+
+
+
+
+/** <examples>
+?- trace, (program(T,['begin', '{', 'string', 'a', '=', '”Hello World”', ';','print','(','a',')',';','}', 'end', '.'],[]),program_semantics(T,Final)).
+*/

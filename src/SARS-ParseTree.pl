@@ -43,10 +43,10 @@ type(int) --> ['int'].
 type(string) -->['string'].
 type(bool) --> ['bool'].
 
-for(t_for(X,Y,Z,W)) --> ['for'],['('],declaration(X),[';'],condition(Y),[';'],iterator(Z),[')'],block(W).
-for(t_for(X,Y,Z,W)) -->['for'],['('],declaration(X),[';'],condition(Y),[';'],expression(Z),[')'],block(W).
-for(t_for(X,Y,Z,W)) --> ['for'],['('],assignment(X),[';'],condition(Y),[';'],iterator(Z),[')'],block(W).
-for(t_for(X,Y,Z,W)) -->['for'],['('],assignment(X),[';'],condition(Y),[';'],expression(Z),[')'],block(W).
+for(t_for(X,Y,Z,W)) --> ['for'],['('],declaration(X),[';'],(condition(Y);bool(Y)),[';'],iterator(Z),[')'],block(W).
+for(t_for(X,Y,Z,W)) -->['for'],['('],declaration(X),[';'],(condition(Y);bool(Y)),[';'],assignment(Z),[')'],block(W).
+for(t_for(X,Y,Z,W)) --> ['for'],['('],assignment(X),[';'],(condition(Y);bool(Y)),[';'],iterator(Z),[')'],block(W).
+for(t_for(X,Y,Z,W)) -->['for'],['('],assignment(X),[';'],(condition(Y);bool(Y)),[';'],expression(Z),[')'],block(W).
 
 while(t_while(X,Y)) --> ['while'], ['('],(condition(X);bool(X)),[')'], block(Y).
 
@@ -55,10 +55,10 @@ for_range(t_for_range(X,Y,Z,W)) --> ['for'], id(X), ['in'],['range'],['('],id(Y)
 for_range(t_for_range(X,Y,Z,W)) --> ['for'], id(X), ['in'],['range'],['('],num(Y),[':'],id(Z),[')'],block(W).
 for_range(t_for_range(X,Y,Z,W)) --> ['for'], id(X), ['in'],['range'],['('],id(Y),[':'],num(Z),[')'],block(W).
 
-if(t_if(X,Y)) --> ['if'],['('],condition(X),[')'], block(Y) .
-if(t_if(X,Y,Z)) --> ['if'],['('],condition(X),[')'], block(Y), ['else'], block(Z).
+if(t_if(X,Y)) --> ['if'],['('],(condition(X);bool(X)),[')'], block(Y) .
+if(t_if(X,Y,Z)) --> ['if'],['('],(condition(X);bool(X)),[')'], block(Y), ['else'], block(Z).
 
-ternary(t_ternary(X,U,V)) --> condition(X), ['?'], command(U), [':'], command(V).
+ternary(t_ternary(X,U,V)) --> (condition(X);bool(X)), ['?'], command(U), [':'], command(V).
 
 output(out(X)) --> ['print'], ['('], id(X),[')'].
 output(out(X)) --> ['print'], ['('], num(X),[')'].
@@ -78,7 +78,6 @@ condition_operator(>=) --> ['>='].
 condition_operator(<=) --> ['<='].
 
 :- table expression/3,term/3.
-expression(X) --> assignment(X).
 expression(t_add(X,Y)) --> expression(X), ['+'], term(Y).
 expression(t_sub(X,Y)) --> expression(X), ['-'], term(Y).
 expression(X) --> term(X).
