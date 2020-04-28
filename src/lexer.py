@@ -32,7 +32,6 @@ def Lexer(filename):
             else:
                 print(each)
                 continue
-        
         cond = ''
         i = 0
         while i < len(token):
@@ -60,7 +59,6 @@ def Lexer(filename):
         var = []    
         i = 0
         x = ''
-        # print(token)
         while i < len(token):
             if x == '(ot':
                 tokenlist.append('(')
@@ -73,7 +71,7 @@ def Lexer(filename):
                 token = token[i+1:]
                 i = 0
                 x = ''
-            elif x == '(nt':
+            elif x == '(int':
                 tokenlist.append('(')
                 tokenlist.append('int')
                 var = []
@@ -81,21 +79,16 @@ def Lexer(filename):
                 i = 0
                 x = ''
             else:
-                
                 x += token[i]
             if token[i] in specialChar:
                 if token[:i] != '':
                     var.append(token[:i])
-                    # print(token[:i])
-                    # print(var)
                 if token[i] == '<' or token[i] == '>' or token[i] == '=':
                     try:
                         if token[i+1] == '=':
                             ts = token[i]+token[i+1]
                             var.append(ts)
-                            # print(token[i:])
                             i += 2
-                            # print(token[i:])
                     except:
                         continue
                 if token[i] == '+':
@@ -103,9 +96,7 @@ def Lexer(filename):
                         if token[i+1] == '+':
                             ts = token[i]+token[i+1]
                             var.append(ts)
-                            # print(token[i:])
                             i += 2
-                            # print(token[i:])
                     except:
                         continue
                 if token[i] == '-':
@@ -113,22 +104,19 @@ def Lexer(filename):
                         if token[i+1] == '-':
                             ts = token[i]+token[i+1]
                             var.append(ts)
-                            # print(token[i:])
                             i += 2
-                            # print(token[i:])
                     except:
                         continue
                 var.append(token[i])
-                # print(var)
                 try:
                     token[i:] == int(token[i:])
-                    # print(token[i:])
+
                     var.append(token[i+1:])
                     token = token[i+4:]
                 except ValueError:
                     try:
                         if token[i+1] == '"':
-                            print(token[i+1:])
+
                             count = 1
                             index = i+2
                             string = ''
@@ -140,18 +128,22 @@ def Lexer(filename):
                                     var.append('"')
                                     var.append(string)
                                     var.append('"')
-                                    token = token[index:]
+                                    token = token[index+1:]
+                                    count += 1
                                     i = 0
+                                    
                         else:
                             token = token[i+1:]
+
                             i = 0
+                            continue
                     except:
                         token = token[i+1:]
-                        # print(var)
+
                         i = 0
+                        continue
             i+=1
-        # print(var)
-        # print(token)
+
         for i in var:
             try:
                 i == int(i)
@@ -168,5 +160,5 @@ def Lexer(filename):
 
 
 if __name__ == "__main__":
-    tokens = Lexer("ternaryExp.SARS")
+    tokens = Lexer("whileloop1.SARS")
     print(tokens)
