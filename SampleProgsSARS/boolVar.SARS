@@ -2,7 +2,7 @@ begin
 {
 bool flag=true;
 int x=8;
-if(x>=10)
+if(x>=9)
 {
 x--;
 }
