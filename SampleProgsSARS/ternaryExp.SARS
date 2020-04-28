@@ -2,6 +2,6 @@ begin
 {
 int x=5;
 int y=6;
-x > y ? print(“x is greater”); : print(“x is not greater”);;
+x > y ? print("x is greater"); : print("x is not greater");;
 }
 end.
