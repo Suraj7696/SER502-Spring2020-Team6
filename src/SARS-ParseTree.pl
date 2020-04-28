@@ -31,7 +31,7 @@ bool(t_or(X,Y)) --> condition(X), ['or'], condition(Y).
 
 
 declaration(t_int_dec(int,X,Y)) --> ['int'], id(X), ['='], expression(Y).
-declaration(t_str_dec(string,X,Y)) --> ['string'], id(X), ['='], id(Y).
+declaration(t_str_dec(string,X,Y)) --> ['string'], id(X), ['='],string(Y).
 declaration(t_bool_dec(bool,X,true)) --> ['bool'], id(X), [=], ['true'].
 declaration(t_bool_dec(bool,X,false)) --> ['bool'], id(X), [=], ['false'].
 declaration(t_dec(X,Y)) --> type(X), id(Y).
@@ -58,13 +58,16 @@ for_range(t_for_range(X,Y,Z,W)) --> ['for'], id(X), ['in'],['range'],['('],id(Y)
 if(t_if(X,Y)) --> ['if'],['('],condition(X),[')'], block(Y) .
 if(t_if(X,Y,Z)) --> ['if'],['('],condition(X),[')'], block(Y), ['else'], block(Z).
 
-ternary(t_ternary(X,U,V)) --> condition(X), ['?'], block(U), [':'], block(V).
+ternary(t_ternary(X,U,V)) --> condition(X), ['?'], command(U), [':'], command(V).
 
 output(out(X)) --> ['print'], ['('], id(X),[')'].
 output(out(X)) --> ['print'], ['('], num(X),[')'].
+output(out(X)) --> ['print'], ['('], string(X),[')'].
+
 
 condition(t_cond(X,Y,Z)) --> expression(X), condition_operator(Y), expression(Z).
-condition(t_cond(X,Y,Z)) --> id(X), condition_operator(Y), id(Z).
+condition(t_cond(X,Y,Z)) --> string(X), condition_operator(Y), string(Z).
+condition(t_cond(X,Y,Z)) --> id(X), condition_operator(Y), string(Z).
 
 
 condition_operator(==) --> ['=='].
@@ -90,3 +93,5 @@ iterator(t_minus(X)) --> id(X), ['--'].
 
 num(t_num(Y)) --> [Y], {number(Y)}.
 id(id(Y)) --> [Y],{atom(Y)}.
+string(Y) --> ['\"'],openstring(Y),['\"'].
+openstring(op(Y)) --> [Y],{atom(Y)}.

@@ -31,7 +31,7 @@ bool(t_or(X,Y)) --> condition(X), ['or'], condition(Y).
 
 
 declaration(t_int_dec(int,X,Y)) --> ['int'], id(X), ['='], expression(Y).
-declaration(t_str_dec(string,X,Y)) --> ['string'], id(X), ['='], id(Y).
+declaration(t_str_dec(string,X,Y)) --> ['string'], id(X), ['='],string(Y).
 declaration(t_bool_dec(bool,X,true)) --> ['bool'], id(X), [=], ['true'].
 declaration(t_bool_dec(bool,X,false)) --> ['bool'], id(X), [=], ['false'].
 declaration(t_dec(X,Y)) --> type(X), id(Y).
@@ -58,13 +58,16 @@ for_range(t_for_range(X,Y,Z,W)) --> ['for'], id(X), ['in'],['range'],['('],id(Y)
 if(t_if(X,Y)) --> ['if'],['('],condition(X),[')'], block(Y) .
 if(t_if(X,Y,Z)) --> ['if'],['('],condition(X),[')'], block(Y), ['else'], block(Z).
 
-ternary(t_ternary(X,U,V)) --> condition(X), ['?'], block(U), [':'], block(V).
+ternary(t_ternary(X,U,V)) --> condition(X), ['?'], command(U), [':'], command(V).
 
 output(out(X)) --> ['print'], ['('], id(X),[')'].
 output(out(X)) --> ['print'], ['('], num(X),[')'].
+output(out(X)) --> ['print'], ['('], string(X),[')'].
+
 
 condition(t_cond(X,Y,Z)) --> expression(X), condition_operator(Y), expression(Z).
-condition(t_cond(X,Y,Z)) --> id(X), condition_operator(Y), id(Z).
+condition(t_cond(X,Y,Z)) --> string(X), condition_operator(Y), string(Z).
+condition(t_cond(X,Y,Z)) --> id(X), condition_operator(Y), string(Z).
 
 
 condition_operator(==) --> ['=='].
@@ -90,6 +93,8 @@ iterator(t_minus(X)) --> id(X), ['--'].
 
 num(t_num(Y)) --> [Y], {number(Y)}.
 id(id(Y)) --> [Y],{atom(Y)}.
+string(Y) --> ['\"'],openstring(Y),['\"'].
+openstring(op(Y)) --> [Y],{atom(Y)}.
 %--------------------------------------------------------------------------------
 check_type(Val,T) :- string(Val),T = string.
 check_type(Val,T) :- integer(Val),T = int.
@@ -140,7 +145,7 @@ dec_eval(t_int_dec(int,Y,Z),Env,NE):-
     eval_expr(Z,Env,E1,Val),update(int,Id,Val,E1,NE).
 dec_eval(t_str_dec(string,Y,Z),Env,NE):- 
     char_tree_to_atom(Y,Id),
-    str_eval(Z,Env,Env,Val),update(string,Id,Val,Env,NE).
+    str_eval(Z,Env,NE1,Val),update(string,Id,Val,NE1,NE).
 dec_eval(t_bool_dec(bool,Y,true),Env,NE):- 
     char_tree_to_atom(Y,Id),
     update(bool,Id,true,Env,NE).
@@ -283,10 +288,7 @@ eval_term3(X,  Env, NE, Val) :- eval_num(X, Env,NE, Val).
 eval_term3(t_bracks(X), Env, NE, Val):- eval_expr(X, Env, NE, Val).
 
 eval_num(t_num(Val), Env,Env, Val).
-eval_num(id(I), Env,Env, Val) :- term_to_atom(Id,I),\+(string(Id)),lookup(Id, Env, Val).
+eval_num(id(I), Env,Env, Val) :- term_to_atom(Id,I),lookup(Id, Env, Val).
 num_tree(t_num(Val),Val).
-char_tree_to_atom(id(I),Id):- term_to_atom(Id,I),\+(string(Id)).
-
-str_eval(id(I), Env,Env, Val) :- term_to_atom(Val,I),string(Val).
-
-
+char_tree_to_atom(id(I),Id):- term_to_atom(Id,I).
+str_eval(op(I), Env,Env, Val) :- atom_string(I,Val).
