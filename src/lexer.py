@@ -4,7 +4,7 @@ def Lexer(filename):
     tokenlist = []
     token = ""
 
-    specialChar = ['/', '*', '+', '-', '=','~','==','<','>',';','(',')','>=','<=',',']
+    specialChar = ['/', '*', '+', '-', '=','~','==','<','>',';','(',')','>=','<=',',','"']
     words = ['begin','end','int','string','print','if','while','bool']
 
     with open(filename, 'r') as grabber:
@@ -60,6 +60,7 @@ def Lexer(filename):
         var = []    
         i = 0
         x = ''
+        # print(token)
         while i < len(token):
             if x == '(ot':
                 tokenlist.append('(')
@@ -125,19 +126,39 @@ def Lexer(filename):
                     var.append(token[i+1:])
                     token = token[i+4:]
                 except ValueError:
-                    # print(token[i+1:])
-                    token = token[i+1:]
-                    # print(var)
-                    i = 0
+                    try:
+                        if token[i+1] == '"':
+                            print(token[i+1:])
+                            count = 1
+                            index = i+2
+                            string = ''
+                            while count != 2:
+                                if token[index] != '"':
+                                    string += token[index]
+                                    index += 1
+                                else:
+                                    var.append('"')
+                                    var.append(string)
+                                    var.append('"')
+                                    token = token[index:]
+                                    i = 0
+                        else:
+                            token = token[i+1:]
+                            i = 0
+                    except:
+                        token = token[i+1:]
+                        # print(var)
+                        i = 0
             i+=1
         # print(var)
+        # print(token)
         for i in var:
             try:
                 i == int(i)
                 tokenlist.append(int(i))
             except:
                 tokenlist.append(i)
-
+        
         if token != '':
             tokenlist.append(token)
         
@@ -147,5 +168,5 @@ def Lexer(filename):
 
 
 if __name__ == "__main__":
-    tokens = Lexer("forloop1.SARS")
+    tokens = Lexer("string.SARS")
     print(tokens)
