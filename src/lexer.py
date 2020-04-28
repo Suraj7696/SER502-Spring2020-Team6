@@ -4,7 +4,7 @@ def Lexer(filename):
     tokenlist = []
     token = ""
 
-    specialChar = ['/', '*', '+', '-', '=','~','==','<','>',';','(',')','>=','<=',',','"']
+    specialChar = ['/', '*', '+', '-', '=','~','==','<','>',';','(',')','>=','<=',',','"',':','?']
     words = ['begin','end','int','string','print','if','while','bool']
 
     with open(filename, 'r') as grabber:
@@ -168,5 +168,5 @@ def Lexer(filename):
 
 
 if __name__ == "__main__":
-    tokens = Lexer("string.SARS")
+    tokens = Lexer("ternaryExp.SARS")
     print(tokens)
