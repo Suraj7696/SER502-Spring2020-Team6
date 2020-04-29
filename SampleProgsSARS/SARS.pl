@@ -1,8 +1,7 @@
 
 sars(Lexername, Filename) :-
     process_create(path('python3.7'), [Lexername, Filename], [stdout(pipe(In))]),
-    read_string(In, Len, X),
-    write(X), 
+    read_string(In, Len, X), 
     term_to_atom(Y,X),
     program(Tree,Y,[]),
     program_semantics(Tree, Output).
