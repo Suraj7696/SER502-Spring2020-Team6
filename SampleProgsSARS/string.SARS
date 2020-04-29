@@ -1,6 +1,0 @@
-begin
-{
-string a="Hello World";
-print(a);
-}
-end.
