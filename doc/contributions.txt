@@ -20,3 +20,10 @@ Suraj(1216073573): compiler & parser using SWI prolog
 Ria(1217195746): compiler & parser using SWI prolog
 Akshay(1217613982): lexical Analyzer using python
 Sheran(1217167939): lexical Analyzer using python
+
+Contributions milestone-2:
+
+Suraj(1216073573): Parse tree evaluator
+Ria(1217195746): Parse tree generator
+Akshay(1217613982): Lexical Analyzer (file integration) and parse tree evaluator
+Sheran(1217167939): lexical Analyzer using python
