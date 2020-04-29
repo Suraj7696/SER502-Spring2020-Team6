@@ -11,8 +11,11 @@ Members:
 ## Description
 SARS is an abbreviation of names of the  team members - Sheran, Akshay, Ria, Suraj (and also very apt at this time)
 
+##
+
 ## Installation
-Requires SWI-Prolog 7.6.4 to be installed on the computer
+ - Requires SWI-Prolog 7.6.4 and Python 3.7 to be installed on the computer
+ - Clone the git Repository
 
 ## Steps to run a program
 - Save the program with .SARS extension.
