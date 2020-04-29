@@ -26,4 +26,4 @@ SARS is an abbreviation of names of the  team members - Sheran, Akshay, Ria, Sur
 - Compile the SARS.pl file using the following command
 - [‘<path to SARS.pl file>’].
 - Run the Program:
-- sars(\‘\<path to the lexer.py file\>\’, ‘<path to the program file with SARS extension>’)
+- sars(‘\<path to the lexer.py file\>’, ‘\<path to the program file with SARS extension\>’)
