@@ -1,0 +1,16 @@
+begin
+{
+bool flag=true;
+int x=8;
+if(x>=9)
+{
+x--;
+}
+else
+{
+flag=false;
+}
+print(x);
+print(flag);
+}
+end.
