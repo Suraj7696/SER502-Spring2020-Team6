@@ -3,10 +3,10 @@
 Language Name :- SARS 
 
 Members:
-** Suraj Atmakuri
-** Akshay Kumar Dileep
-** Ria Mehta
-** Sheran Dass Dominic Ravi Chandran
+- Suraj Atmakuri
+- Akshay Kumar Dileep
+- Ria Mehta
+- Sheran Dass Dominic Ravi Chandran
 
 ## Description
 SARS is an abbreviation of names of the  team members - Sheran, Akshay, Ria, Suraj (and also very apt at this time)
