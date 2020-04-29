@@ -122,7 +122,7 @@ update(Type,Id, Val, [], [(Type,Id, Val)]).
 update(Type,Id, Val, [(Type,Id,_)|T], [(Type,Id, Val)|T]).
 update(Type,Id, Val, [H|T], [H|R]) :- update(Type,Id, Val, T, R).
 %---------------------------------- SEMANTICS ------------------------------------
-program_semantics(prog(X),FinalEnv) :- block_eval(X,[],FinalEnv).
+program_semantics(prog(X),FinalEnv) :- block_eval(X,[],FinalEnv),!.
 
 block_eval(blk(X),Env,FinalEnv) :- bp_eval(X,Env,FinalEnv).
 
@@ -171,18 +171,25 @@ bool_eval(t_and(X,Y),E,NE,Val) :- con_eval(X,E,NE,Val1),con_eval(Y,E,NE,Val2), a
 bool_eval(t_or(X,Y),E,NE,Val) :- bool_eval(X,E,NE,Val1),bool_eval(Y,E,NE,Val2), or(Val1,Val2,Val).
 bool_eval(t_or(X,Y),E,NE,Val) :- con_eval(X,E,NE,Val1),con_eval(Y,E,NE,Val2), or(Val1,Val2,Val).
 
-con_eval(t_cond(X,==,Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),eval_expr(Y,E,NE,Val2),
+con_eval(t_cond(X,==,Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),check_type(Val1,int),
+    eval_expr(Y,E,NE,Val2),check_type(Val2,int),
     (( Val1 =:= Val2, Val = true); ( \+(Val1 =:= Val2), Val = false)).
-con_eval(t_cond(X,'!=',Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),eval_expr(Y,E,NE,Val2),
+con_eval(t_cond(X,'!=',Y),E,NE,Val) :-  eval_expr(X,E,NE,Val1),check_type(Val1,int),
+    eval_expr(Y,E,NE,Val2),check_type(Val2,int),
     (( Val1 =\= Val2, Val = true);( \+(Val1 =\= Val2), Val = false)).
-con_eval(t_cond(X,'>',Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),eval_expr(Y,E,NE,Val2),
+con_eval(t_cond(X,'>',Y),E,NE,Val) :-  eval_expr(X,E,NE,Val1),check_type(Val1,int),
+    eval_expr(Y,E,NE,Val2),check_type(Val2,int),
     (( Val1 > Val2, Val = true);( \+(Val1 > Val2), Val = false)).
-con_eval(t_cond(X,'<',Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),eval_expr(Y,E,NE,Val2),
+con_eval(t_cond(X,'<',Y),E,NE,Val) :-  eval_expr(X,E,NE,Val1),check_type(Val1,int),
+    eval_expr(Y,E,NE,Val2),check_type(Val2,int),
     (( Val1 < Val2, Val = true);( \+(Val1 < Val2), Val = false)).
-con_eval(t_cond(X,'>=',Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),eval_expr(Y,E,NE,Val2),
+con_eval(t_cond(X,'>=',Y),E,NE,Val) :-  eval_expr(X,E,NE,Val1),check_type(Val1,int),
+    eval_expr(Y,E,NE,Val2),check_type(Val2,int),
     (( Val1 >= Val2, Val = true);( \+(Val1 >= Val2), Val = false)).
-con_eval(t_cond(X,'<=',Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),eval_expr(Y,E,NE,Val2),
+con_eval(t_cond(X,'<=',Y),E,NE,Val) :-  eval_expr(X,E,NE,Val1),check_type(Val1,int),
+    eval_expr(Y,E,NE,Val2),check_type(Val2,int),
     (( Val1 =< Val2, Val = true);( \+(Val1 =< Val2), Val = false)).
+
 con_eval(t_cond(X,==,Y),E,NE,Val) :- str_eval(X,E,NE,Val1),str_eval(Y,E,NE,Val2),
     ((Val1 = Val2, Val = true);(\+(Val1 = Val2), Val = false)).
 con_eval(t_cond(X,'!=',Y),E,NE,Val) :- str_eval(X,E,NE,Val1),str_eval(Y,E,NE,Val2),
@@ -195,6 +202,7 @@ con_eval(t_cond(X,'>=',Y),E,NE,_Val) :- str_eval(X,E,NE,_Val1),str_eval(Y,E,NE,_
     write("cannot perform this operation on strings").
 con_eval(t_cond(X,'<=',Y),E,NE,_Val) :- str_eval(X,E,NE,_Val1),str_eval(Y,E,NE,_Val2),
     write("cannot perform this operation on strings").
+
 con_eval(t_cond(X,==,Y),E,NE,Val) :- char_tree_to_atom(X,Id),lookup(Id,E,Val1),
     check_type(Val1,T),T=string,str_eval(Y,E,NE,Val2),
     ((Val1 =@= Val2, Val = true);(\+(Val1 =@= Val2), Val = false)).
@@ -212,6 +220,25 @@ con_eval(t_cond(X,'>=',Y),E,NE,_Val) :- char_tree_to_atom(X,Id),lookup(Id,E,Val1
     write("cannot perform this operation on strings").
 con_eval(t_cond(X,'<=',Y),E,NE,_Val) :- char_tree_to_atom(X,Id),lookup(Id,E,Val1),check_type(Val1,T),
     T=string,str_eval(Y,E,NE,_Val2),
+    write("cannot perform this operation on strings").
+
+con_eval(t_cond(X,==,Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),check_type(Val1,string),
+    eval_expr(Y,E,NE,Val2),check_type(Val2,string),
+    ((Val1 =@= Val2, Val = true);(\+(Val1 =@= Val2), Val = false)).
+con_eval(t_cond(X,'!=',Y),E,NE,Val) :- eval_expr(X,E,NE,Val1),check_type(Val1,string),
+    eval_expr(Y,E,NE,Val2),check_type(Val2,string),
+    ((Val1 = Val2, Val = false);(\+(Val1 = Val2), Val = true)).
+con_eval(t_cond(X,'>',Y),E,NE,_Val) :- eval_expr(X,E,NE,Val1),check_type(Val1,string),
+    eval_expr(Y,E,NE,Val2),check_type(Val2,string),
+    write("cannot perform this operation on strings").
+con_eval(t_cond(X,'<',Y),E,NE,_Val) :- eval_expr(X,E,NE,Val1),check_type(Val1,string),
+    eval_expr(Y,E,NE,Val2),check_type(Val2,string),
+    write("cannot perform this operation on strings").
+con_eval(t_cond(X,'>=',Y),E,NE,_Val) :- eval_expr(X,E,NE,Val1),check_type(Val1,string),
+    eval_expr(Y,E,NE,Val2),check_type(Val2,string),
+    write("cannot perform this operation on strings").
+con_eval(t_cond(X,'<=',Y),E,NE,_Val) :- eval_expr(X,E,NE,Val1),check_type(Val1,string),
+    eval_expr(Y,E,NE,Val2),check_type(Val2,string),
     write("cannot perform this operation on strings").
 
 
@@ -300,6 +327,4 @@ str_eval(op(I), Env,Env, Val) :- atom_string(I,Val).
 
 
 
-/** <examples>
-?- trace, (program(T,['begin', '{', 'string', 'a', '=', '”Hello World”', ';','print','(','a',')',';','}', 'end', '.'],[]),program_semantics(T,Final)).
-*/
+
